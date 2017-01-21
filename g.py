@@ -92,8 +92,10 @@ e3 = [ pygame.image.load("e31.png"), pygame.image.load("e32.png"), pygame.image.
 e4 = [ pygame.image.load("e41.png"), pygame.image.load("e42.png"), pygame.image.load("e43.png"), pygame.image.load("e44.png") ]
 pygame.mouse.set_visible(False)
 
+exp = [ pygame.image.load("big_exp_1.png"), pygame.image.load("big_exp_2.png"), pygame.image.load("big_exp_3.png"), pygame.image.load("big_exp_4.png"), pygame.image.load("big_exp_5.png"), pygame.image.load("big_exp_6.png"), pygame.image.load("big_exp_7.png") ]
 etypes = [e1, e2, e3, e4]
 rtypes = [True, False, False, True]
+explosions = []
 
 enemdata = []
 z = 0
@@ -277,6 +279,8 @@ while True:
                 menu = 0
                 enemy_score = 0
                 hit_points = 100
+                enemies = []
+                explosions = []
                 frame = 0
             else:
                 menu = 2
@@ -301,6 +305,7 @@ while True:
         m_t = 0.0
         if menu != 2:
             enemies = [{ 'shift' : -70, 'hp' : 1.0, 'x' : 400, 'y' : wh / 2, 'et' : 0, 'c' : 20, 'f' : 3, 'h' : 50, 's' : frame, 'sp' : 0.0}]
+            explosions = []
 
     move_t = max(0.0, 0.5 - m_t)
     
@@ -326,6 +331,7 @@ while True:
     if keys[pygame.K_RETURN] or keys[pygame.K_SPACE]:
         if released:
             enemies = []
+            explosions = []
             menu += 1
             m_t = 5.0
             released = False
@@ -394,7 +400,9 @@ while True:
     ship_y = wh - 40
     s_shift = -3
   
-  
+  diff = frame / 10000.0
+  if diff > 1.0:
+    diff = 1.0
   for s in stars:
     s[0] -= 0.25 * s[2]
     if s[0] < -100:
@@ -575,7 +583,7 @@ while True:
                 hpm[i-1] += 0.002
             if i < c-1:
                 hpm[i+1] += 0.002
-                
+    all_dead = True
     for i in xrange(c):
         m = len(t) * 2 - 2
 
@@ -597,6 +605,7 @@ while True:
                 hpm[i] = -1.0
                 if alive:
                     enemy_score += 1
+                    explosions.append([x,  y + s * h, frame_2])
         elif x > ship_x + 40 and x < ww + 10:
             laser_y =  math.sin((x - ship_x - 22) * 0.01 * f) * s_h + ship_y
             if abs(laser_y - (y + s * h)) < 6:
@@ -605,12 +614,14 @@ while True:
                     hpm[i] = -1.0
                     if alive:
                         enemy_score += 1
+                        explosions.append([x,  y + s * h, frame_2])
         
     
         if hpm[i] < -1.0 and hpm[i] > -1000.0:
             hpm[i] = -1.0
         if hpm[i] > 0.0:
 
+            all_dead = False
             a = frame_2 / 50.0
             d = 10
             screen.blit(red[tf], (x - 8 + math.sin(a) * red_shift * d,  y + s * h - 8 + math.cos(a) * red_shift * d), None, pygame.BLEND_RGB_MAX )
@@ -628,17 +639,25 @@ while True:
         x += (abs(s) * 0.5 + 1.5) * 12
     max_enemy = max(max_enemy, x)
 
-    if x < -20 or e['c'] == 0 and menu == 0:
+    if all_dead or x < -20 or e['c'] == 0 and menu == 0:
         enemies.remove(e)
-  
+ 
+  for e in explosions:
+    t = int((frame_2 - e[2]) / 12)
+    if t >= len(exp):
+        explosions.remove(e)
+    else:
+        screen.blit(exp[t], (e[0] - 8, e[1] - 8) ) 
+    
   if menu == 0 and (len(enemies) == 0 or frame > r_spawn):
     et = randint(0, len(etypes)-1)
     
-    enemies.append({ 'shift' : random() * 100, 'hp' : 1.0, 'x' : ww + 20 + random() * 40, 'y' : random() * (wh - 300) + 150, 'et' : et, 'c' : randint(8, 16), 'f' : 3 + random() * 0 , 'h' : min_h + random() * (max_h - min_h), 's' : frame, 'sp' : 0.5 + random() * 0.5})
-    r_spawn = random() * 300 + 400 + frame
+    enemies.append({ 'shift' : random() * 100, 'hp' : 1.0, 'x' : ww + 20 + random() * 40, 'y' : random() * (wh - 300) + 150, 'et' : et, 'c' : randint(8, 16), 'f' : 3 + random() * 0 , 'h' : min_h + random() * (max_h - min_h), 's' : frame, 'sp' : (0.5 + random() * 0.5) * (diff * 0.6 + 0.4) })
+    r_spawn = random() * 300 + 400 + frame + (1.0 - diff) * 1000
   if menu == 0 and hit_points <= 0:
     menu = 7
     enemies = []
+    explosions = []
     option = 0
   pygame.display.flip()
   if stream.get_read_available() >= chunk:
