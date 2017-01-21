@@ -1,5 +1,7 @@
 import sys, pygame
 from matplotlib.mlab import find
+import matplotlib
+data_files=matplotlib.get_py2exe_datafiles()
 import pyaudio
 import numpy as np
 import math
