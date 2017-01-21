@@ -218,6 +218,7 @@ menu_bg = pygame.transform.scale(menu_bg, bg_size)
 released = True
 menu_sh = 30
 basicfont = pygame.font.Font("game_over.ttf", 64)
+option = 0
 while True:
   clock.tick(150)
   keys=pygame.key.get_pressed()
@@ -234,12 +235,51 @@ while True:
   screen.fill((0, 0, 0))
   
   if menu == 1:
-    screen.blit(menu_bg, ((bg_size[0] - ww) * -0.5, (bg_size[1] - wh) * -0.1))
-    pygame.display.flip()
+    screen.blit(menu_bg, ((bg_size[0] - ww) * -0.5, (bg_size[1] - wh) * -0.3))
+
+    pygame.draw.rect(screen, (0, 0, 0), (screen.get_rect().w * 0.5 - 100, screen.get_rect().h - 93, 200, 85))
     
-    if keys[pygame.K_RETURN] or keys[pygame.K_SPACE]:
+    text = basicfont.render('Start Game', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.y = screen.get_rect().h - 90.0
+    oldrect = textrect
+    screen.blit(text, textrect)
+
+    text = basicfont.render('Tutorial', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.y = screen.get_rect().h - 60.0
+    screen.blit(text, textrect)
+    
+    
+    screen.blit(ship, (screen.get_rect().w * 0.5 - 90 + option * 20, screen.get_rect().h - 75 + option * 30))
+    pygame.display.flip()
+
+    if keys[pygame.K_UP] or keys[pygame.K_w]:
         if released:
-            menu = 2
+            released = False
+            option -= 1
+            if option < 0:
+                option = 0
+    elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        if released:
+            released = False
+            option += 1
+            if option > 1:
+                option = 1
+    elif keys[pygame.K_RETURN] or keys[pygame.K_SPACE]:
+  
+        if released:
+            ship_x = start_x
+            ship_y = start_y
+            if option == 0:
+                menu = 0
+                enemy_score = 0
+                hit_points = 100
+                frame = 0
+            else:
+                menu = 2
             released = False
             m_t = 0.0
     else:
@@ -248,16 +288,19 @@ while True:
     
   elif menu == 2 or menu == 3 or menu == 4 or menu == 5:
     m_t += 0.004
-    max_t = 1.2
+    max_t = 2.0
+    if menu < 4:
+        max_t = 1.4
     if menu == 4:
-        max_t = 2.2
+        max_t = 4.0
         
     if menu == 5:
         max_t = 3.2
         
     if m_t > max_t:
         m_t = 0.0
-        enemies = [{ 'shift' : -70, 'hp' : 1.0, 'x' : 400, 'y' : wh / 2, 'et' : 0, 'c' : 20, 'f' : 3, 'h' : 50, 's' : frame, 'sp' : 0.0}]
+        if menu != 2:
+            enemies = [{ 'shift' : -70, 'hp' : 1.0, 'x' : 400, 'y' : wh / 2, 'et' : 0, 'c' : 20, 'f' : 3, 'h' : 50, 's' : frame, 'sp' : 0.0}]
 
     move_t = max(0.0, 0.5 - m_t)
     
@@ -272,8 +315,10 @@ while True:
     ship_y = start_y + 150 * move_t
     if menu == 5:
         ship_x = start_x + 250 * 0.4
-        ship_y = start_y + 150 * max(0.0, 0.4 - m_t)
+        ship_y = start_y + 250 * 0.4
         menu_sh = 20
+        if m_t > 0.2:
+            ship_y = start_y + 250 * max(0.0, 0.6 - m_t)
         if m_t > 0.8:
             ship_x = start_x + 250 * max(0.0, 1.2 - m_t)
         if m_t > 1.8:
@@ -527,9 +572,9 @@ while True:
     for i in xrange(c):
         if hpm[i] > 0.0:
             if i > 0:
-                hpm[i-1] += 0.003
+                hpm[i-1] += 0.002
             if i < c-1:
-                hpm[i+1] += 0.003
+                hpm[i+1] += 0.002
                 
     for i in xrange(c):
         m = len(t) * 2 - 2
@@ -549,15 +594,15 @@ while True:
         if x > ship_x + 20 and hits:
             hpm[i] -= 0.3
             if hpm[i] < 0.0:
-                hpm[i] = -0.7
+                hpm[i] = -1.0
                 if alive:
                     enemy_score += 1
         elif x > ship_x + 40 and x < ww + 10:
             laser_y =  math.sin((x - ship_x - 22) * 0.01 * f) * s_h + ship_y
-            if abs(laser_y - (y + s * h)) < 5:
-                hpm[i] -= 0.015
+            if abs(laser_y - (y + s * h)) < 6:
+                hpm[i] -= 0.05
                 if hpm[i] < 0.0:
-                    hpm[i] = -0.7
+                    hpm[i] = -1.0
                     if alive:
                         enemy_score += 1
         
@@ -578,7 +623,7 @@ while True:
             screen.blit(t[tf], (x - 8,  y + s * h - 8) ) 
         if x < -10 and hpm[i] > -1000.0:
             if hpm[i] > 0.0:
-                hit_points -= 1
+                hit_points -= 5
             hpm[i] = -100000.0
         x += (abs(s) * 0.5 + 1.5) * 12
     max_enemy = max(max_enemy, x)
@@ -594,6 +639,7 @@ while True:
   if menu == 0 and hit_points <= 0:
     menu = 7
     enemies = []
+    option = 0
   pygame.display.flip()
   if stream.get_read_available() >= chunk:
     data = stream.read(chunk)
