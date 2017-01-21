@@ -273,7 +273,7 @@ while True:
   
   
   h = smooth_m - 100
-  h = max(0, min(h * 0.03, max_h + 50))
+  h = max(0, min(h * 0.15, max_h + 50))
   f = smooth_f/450
   
   f = max(3.0, min(3.0 + (f - 1.0) * 2, 50.0))
