@@ -318,27 +318,35 @@ while True:
     blue_shift =  max(0.0, min(1.0, (abs(s_h - h) - 10) / 10.0))
     n = (sh + ship_x + 22) * 0.01 * f * 0.5 / math.pi
     n = abs(n - round(n))
-    green_shift = max(0.0, min(1.0, n * 2.0 - 0.4))
+    green_shift = max(0.0, min(1.0, n * 2.0 - 0.15))
     
-    
+    if ('hpm' in e) == False:
+        e['hpm'] = []
+            
+        for i in xrange(c):
+            e['hpm'].append(1.0)
+        
+    hpm = e['hpm']
     if green_shift + red_shift + blue_shift < 0.01:
-        e['hp'] -= 0.15
-        if e['hp'] <= 0:
-            e['hp'] = 0.0
-            hits = True
+        hits = True
     else:
         e['hp'] += 0.02
         if e['hp'] >= 1.0:
             e['hp'] = 1.0
             
+
             
+    for i in xrange(c):
+        if hpm[i] > 0.0:
+            if i > 0:
+                hpm[i-1] += 0.003
+            if i < c-1:
+                hpm[i+1] += 0.003
+                
     for i in xrange(c):
         m = len(t) * 2 - 2
 
-        if x > ship_x + 20 and hits:
-            e['c'] = i
-            break
-        
+            
         if r:
             tf = int(fr * 0.07 + i * 0.4) % m
             if tf >= len(t):
@@ -347,17 +355,36 @@ while True:
             tf = int(fr * 0.07 + i * 0.4) % len(t)
         s = math.sin((x + sh) * 0.01 * f) 
         
-        a = frame / 30.0
-        d = 10
-        screen.blit(red[tf], (x - 8 + math.sin(a) * red_shift * d,  y + s * h - 8 + math.cos(a) * red_shift * d), None, pygame.BLEND_RGB_MAX )
-        a += math.pi * 0.66
-        screen.blit(blue[tf], (x - 8 + math.sin(a) * blue_shift * d,  y + s * h - 8 + math.cos(a) * blue_shift * d), None, pygame.BLEND_RGB_MAX )
-        a += math.pi * 0.66
-        screen.blit(green[tf], (x - 8 + math.sin(a) * green_shift * d,  y + s * h - 8 + math.cos(a) * green_shift * d), None, pygame.BLEND_RGB_MAX )
+        if hpm[i] > 1.0:
+            hpm[i] = 1.0
+            
+        if x > ship_x + 20 and hits:
+            hpm[i] -= 0.3
+            if hpm[i] < 0.0:
+                hpm[i] = -0.5
+        elif x > ship_x + 40 and x < ww + 10:
+            laser_y =  math.sin((x - ship_x) * 0.01 * f) * s_h + ship_y
+            if abs(laser_y - (y + s * h)) < 5:
+                hpm[i] -= 0.015
+                if hpm[i] < 0.0:
+                    hpm[i] = -0.5
         
-        
-        screen.blit(t[tf], (x - 8,  y + s * h - 8) ) 
-        
+    
+        if hpm[i] < -1.0:
+            hpm[i] = -1.0
+        if hpm[i] > 0.0:
+
+            a = frame / 30.0
+            d = 10
+            screen.blit(red[tf], (x - 8 + math.sin(a) * red_shift * d,  y + s * h - 8 + math.cos(a) * red_shift * d), None, pygame.BLEND_RGB_MAX )
+            a += math.pi * 0.66
+            screen.blit(blue[tf], (x - 8 + math.sin(a) * blue_shift * d,  y + s * h - 8 + math.cos(a) * blue_shift * d), None, pygame.BLEND_RGB_MAX )
+            a += math.pi * 0.66
+            screen.blit(green[tf], (x - 8 + math.sin(a) * green_shift * d,  y + s * h - 8 + math.cos(a) * green_shift * d), None, pygame.BLEND_RGB_MAX )
+            
+            
+            screen.blit(t[tf], (x - 8,  y + s * h - 8) ) 
+            
         x += (abs(s) * 0.5 + 1.5) * 12
     max_enemy = max(max_enemy, x)
 
