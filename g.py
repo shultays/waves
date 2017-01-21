@@ -40,8 +40,8 @@ pygame.init()
 
 
 infoObject = pygame.display.Info()
-ww = infoObject.current_w 
-wh = infoObject.current_h 
+ww = infoObject.current_w / 2
+wh = infoObject.current_h / 2
 screen = pygame.display.set_mode((ww, wh), pygame.DOUBLEBUF | pygame.NOFRAME )
 
 pygame.display.set_caption("Waves")
@@ -177,7 +177,6 @@ max_h = 120
 
 stars = []
 
-
 for i in xrange(int(ww*wh/3000)):
     x = random() * (ww + 200) - 100
     y = random() * (wh + 100) - 50
@@ -216,10 +215,10 @@ while True:
   show_t = (frame % 20) > 5
   img = ship
   if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-    ship_x -= 3
+    ship_x -= 4
     show_t = False
   if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-    ship_x += 3
+    ship_x += 4
     show_t = True
   if keys[pygame.K_UP] or keys[pygame.K_w]:
     ship_y -= 3
@@ -283,13 +282,14 @@ while True:
   f = 3
   s_h = h
   s_f = f
+  
   for i in xrange(550):
     
     sx = ship_x + 22
     x = i * 3 + sx
     
     
-    points.append( (x, ship_y + math.sin(i * 3 * 0.01 * f) * h * min(1.0, i * 0.1)))
+    points.append( (x, ship_y + math.sin(i * 3 * 0.01 * f) * s_h * min(1.0, i * 0.1)))
     
   
   pygame.draw.lines(screen, (155, 155, 155),  False, points, 3)
@@ -314,21 +314,24 @@ while True:
     
     hits = False
 
-
-
     red_shift = max(0.0, min(1.0, (abs(ship_y - y) - 7) / 100.0))
     blue_shift =  max(0.0, min(1.0, (abs(s_h - h) - 10) / 10.0))
     n = (sh + ship_x + 22) * 0.01 * f * 0.5 / math.pi
     n = abs(n - round(n))
-    green_shift = max(0.0, min(1.0, n * 1.5 - 0.1))
+    green_shift = max(0.0, min(1.0, n * 2.0 - 0.4))
     
     
     if green_shift + red_shift + blue_shift < 0.01:
-        hits = True
+        e['hp'] -= 0.15
+        if e['hp'] <= 0:
+            e['hp'] = 0.0
+            hits = True
     else:
         e['hp'] += 0.02
         if e['hp'] >= 1.0:
             e['hp'] = 1.0
+            
+            
     for i in xrange(c):
         m = len(t) * 2 - 2
 
@@ -344,7 +347,7 @@ while True:
             tf = int(fr * 0.07 + i * 0.4) % len(t)
         s = math.sin((x + sh) * 0.01 * f) 
         
-        a = frame / 100.0
+        a = frame / 30.0
         d = 10
         screen.blit(red[tf], (x - 8 + math.sin(a) * red_shift * d,  y + s * h - 8 + math.cos(a) * red_shift * d), None, pygame.BLEND_RGB_MAX )
         a += math.pi * 0.66
