@@ -55,8 +55,11 @@ bg=pygame.image.load("bg.png")
 bg_2=pygame.image.load("bg_2.png")
 clock = pygame.time.Clock()
  
-ship_x = 300
-ship_y = 200
+ship_x = 50
+ship_y = wh / 2
+
+start_x = ship_x
+start_y = ship_y
 
 box_dir = 3
 
@@ -82,7 +85,7 @@ m = 0
 smooth_m = 0
 smooth_f = 0
 frame = 0
-
+frame_2 = 0
 e1 = [ pygame.image.load("e11.png"), pygame.image.load("e12.png"), pygame.image.load("e13.png"), pygame.image.load("e14.png"), pygame.image.load("e15.png") ]
 e2 = [ pygame.image.load("e21.png"), pygame.image.load("e22.png"), pygame.image.load("e23.png"), pygame.image.load("e24.png"), pygame.image.load("e25.png"), pygame.image.load("e26.png"), pygame.image.load("e27.png"), pygame.image.load("e28.png"), pygame.image.load("e29.png") ]
 e3 = [ pygame.image.load("e31.png"), pygame.image.load("e32.png"), pygame.image.load("e33.png"), pygame.image.load("e34.png"), pygame.image.load("e35.png"), pygame.image.load("e36.png") ]
@@ -177,6 +180,10 @@ max_h = 120
 
 stars = []
 
+m_t = 0
+
+enemy_score = 0
+hit_points = 100
 for i in xrange(int(ww*wh/3000)):
     x = random() * (ww + 200) - 100
     y = random() * (wh + 100) - 50
@@ -194,6 +201,23 @@ for i in xrange(int(ww*wh/3000)):
     stars.append([x, y, random() * 0.7 + 0.3, r, g, b])
 
 r_spawn = random() * 100
+
+menu = 1
+score = 0
+menu_bg = pygame.image.load("waveshift.jpg")
+bg_size = [750, 537]
+
+if bg_size[0] < ww:
+    bg_size[1] = int(bg_size[1]  * float(ww) / bg_size[0])
+    bg_size[0] = ww
+if bg_size[1] < wh:
+    bg_size[0] = int(bg_size[0]  * float(wh) / bg_size[1])
+    bg_size[1] = wh
+
+menu_bg = pygame.transform.scale(menu_bg, bg_size)
+released = True
+menu_sh = 30
+basicfont = pygame.font.Font("game_over.ttf", 64)
 while True:
   clock.tick(150)
   keys=pygame.key.get_pressed()
@@ -203,31 +227,112 @@ while True:
  
   if keys[pygame.K_ESCAPE] or keys[pygame.K_q]:
     sys.exit()
+  frame_2 += 1
     
-    
-  if keys[pygame.K_z] == False:
+  if keys[pygame.K_z] == False and menu == 0:
     frame += 1
   screen.fill((0, 0, 0))
-
   
+  if menu == 1:
+    screen.blit(menu_bg, ((bg_size[0] - ww) * -0.5, (bg_size[1] - wh) * -0.1))
+    pygame.display.flip()
+    
+    if keys[pygame.K_RETURN] or keys[pygame.K_SPACE]:
+        if released:
+            menu = 2
+            released = False
+            m_t = 0.0
+    else:
+        released = True
+    continue
+    
+  elif menu == 2 or menu == 3 or menu == 4 or menu == 5:
+    m_t += 0.004
+    max_t = 1.2
+    if menu == 4:
+        max_t = 2.2
+        
+    if menu == 5:
+        max_t = 3.2
+        
+    if m_t > max_t:
+        m_t = 0.0
+        enemies = [{ 'shift' : -70, 'hp' : 1.0, 'x' : 400, 'y' : wh / 2, 'et' : 0, 'c' : 20, 'f' : 3, 'h' : 50, 's' : frame, 'sp' : 0.0}]
+
+    move_t = max(0.0, 0.5 - m_t)
+    
+    if menu == 4:
+        move_t = max(move_t, m_t - 1.4)
+    
+    if menu == 2:
+        ship_x = start_x + 100 * move_t
+    else:
+        ship_x = start_x
+        
+    ship_y = start_y + 150 * move_t
+    if menu == 5:
+        ship_x = start_x + 250 * 0.4
+        ship_y = start_y + 150 * max(0.0, 0.4 - m_t)
+        menu_sh = 20
+        if m_t > 0.8:
+            ship_x = start_x + 250 * max(0.0, 1.2 - m_t)
+        if m_t > 1.8:
+            menu_sh = 50 - 30 * max(0.0, 2.6 - m_t) / 0.8
+    if keys[pygame.K_RETURN] or keys[pygame.K_SPACE]:
+        if released:
+            enemies = []
+            menu += 1
+            m_t = 5.0
+            released = False
+                    
+            ship_x = start_x
+            ship_y = start_y
+    else:
+        released = True
+        
+  elif menu == 6:
+    if keys[pygame.K_RETURN] or keys[pygame.K_SPACE]:
+        if released:
+            menu = 0
+            enemy_score = 0
+            hit_points = 100
+            frame = 0
+            released = False
+    else:
+        released = True
+  elif menu == 7:
+    text = basicfont.render('Final Score : ' + str(score), True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery
+    screen.blit(text, textrect)
+    if keys[pygame.K_RETURN] or keys[pygame.K_SPACE]:
+        if released:
+            menu = 1
+            released = False
+    else:
+        released = True
+    pygame.display.flip()
+    continue
  #ship
   t_shift = 0
   show_t = (frame % 20) > 5
   img = ship
-  if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-    ship_x -= 4
-    show_t = False
-  if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-    ship_x += 4
-    show_t = True
-  if keys[pygame.K_UP] or keys[pygame.K_w]:
-    ship_y -= 3
-    img = ship_up
-    t_shift = 3
-  if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-    ship_y += 3
-    img = ship_down
-    t_shift = -3
+  if menu == 0 or menu == 6:
+      if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+        ship_x -= 3
+        show_t = False
+      if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        ship_x += 3
+        show_t = True
+      if keys[pygame.K_UP] or keys[pygame.K_w]:
+        ship_y -= 2
+        img = ship_up
+        t_shift = 3
+      if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        ship_y += 2
+        img = ship_down
+        t_shift = -3
 
   if ship_x < 20:
     ship_x = 20
@@ -264,15 +369,95 @@ while True:
   screen.blit(img, (ship_x, ship_y - 7 + t_shift))
   if show_t:
     screen.blit(thruster, (ship_x- 8, ship_y - 1))
- 
- 
+
+  if menu == 2:
+      text = basicfont.render('Use WASD to move around', True, (200, 200, 200))
+      textrect = text.get_rect()
+      textrect.centerx = screen.get_rect().centerx
+      textrect.centery = screen.get_rect().centery - 150
+      screen.blit(text, textrect)
+
+  elif menu == 3:
+      text = basicfont.render('Keep your "Sonic Wave Gun" on your enemies', True, (200, 200, 200))
+      textrect = text.get_rect()
+      textrect.centerx = screen.get_rect().centerx
+      textrect.centery = screen.get_rect().centery - 150
+      screen.blit(text, textrect)
+      
+  elif menu == 4:
+      text = basicfont.render('If your gun is not synced with enemy wave, you deal minimum damage', True, (200, 200, 200))
+      textrect = text.get_rect()
+      textrect.centerx = screen.get_rect().centerx
+      textrect.centery = screen.get_rect().centery - 150
+      screen.blit(text, textrect)
+
+      text = basicfont.render('And enemy ship can repair themselves', True, (200, 200, 200))
+      textrect = text.get_rect()
+      textrect.centerx = screen.get_rect().centerx
+      textrect.centery = screen.get_rect().centery - 120
+      screen.blit(text, textrect)
+  
+  elif menu == 5:
+    text = basicfont.render('Move vertically to center the enemy wave', True, (200, 50, 50))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery - 200
+    screen.blit(text, textrect)
+  
+    text = basicfont.render('Move horizontally to overlap your wavelength with enemy wave', True, (50, 200, 50))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery - 160
+    screen.blit(text, textrect)
+    
+    
+    text = basicfont.render('Use your microphone to align your wave amplitude with enemies', True, (50, 50, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery - 120
+    screen.blit(text, textrect)
+    
+    text = basicfont.render('If you properly align your gun, you kill entire wave instantly!', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery + 160
+    screen.blit(text, textrect)
+    
+    
+  elif menu == 6:
+  
+    text = basicfont.render('Do not let enemies to escape!', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery - 200
+    screen.blit(text, textrect)
+  
+    text = basicfont.render('Hit SPACE to start game', True, (50, 200, 50))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery - 160
+    screen.blit(text, textrect)
+    
+  elif menu == 0:
+    score = int(frame/400) * 10 + enemy_score * 20
+    text = basicfont.render('Score: ' + str(score), True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.x = 14.0
+    textrect.y = 14.0
+    screen.blit(text, textrect)
+    text = basicfont.render('Hitpoints: ' + str(hit_points), True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.x = 14.0
+    textrect.y = 44.0
+    screen.blit(text, textrect)
+  
 #laser
 
   points = []
   
   
   h = smooth_m - 100
-  h = max(0, min(h * 0.15, max_h + 50))
+  h = max(0, min(h * 0.25, max_h + 50))
   f = smooth_f/450
   
   f = max(3.0, min(3.0 + (f - 1.0) * 2, 50.0))
@@ -282,16 +467,18 @@ while True:
   f = 3
   s_h = h
   s_f = f
-  
+
+  if menu == 2 or menu == 3:
+    s_h = 50
+  if menu == 4:
+    s_h = 33
+  if menu == 5:
+    s_h = menu_sh
   for i in xrange(550):
-    
     sx = ship_x + 22
     x = i * 3 + sx
-    
-    
     points.append( (x, ship_y + math.sin(i * 3 * 0.01 * f) * s_h * min(1.0, i * 0.1)))
     
-  
   pygame.draw.lines(screen, (155, 155, 155),  False, points, 3)
   pygame.draw.lines(screen, (0, 0, 200),  False, points, 1)
   
@@ -300,6 +487,7 @@ while True:
   max_enemy = -100
   for e in enemies:
     fr = frame - e['s']
+    fr2 = frame_2 - e['s']
     sx = x = e['x'] - fr * e['sp']
     y = e['y']
     h = e['h']
@@ -314,8 +502,8 @@ while True:
     
     hits = False
 
-    red_shift = max(0.0, min(1.0, (abs(ship_y - y) - 7) / 100.0))
-    blue_shift =  max(0.0, min(1.0, (abs(s_h - h) - 10) / 10.0))
+    red_shift = max(0.0, min(1.0, (abs(ship_y - y) - 7) / 30.0))
+    blue_shift =  max(0.0, min(1.0, (abs(s_h - h) - 15) / 10.0))
     n = (sh + ship_x + 22) * 0.01 * f * 0.5 / math.pi
     n = abs(n - round(n))
     green_shift = max(0.0, min(1.0, n * 2.0 - 0.15))
@@ -348,33 +536,37 @@ while True:
 
             
         if r:
-            tf = int(fr * 0.07 + i * 0.4) % m
+            tf = int(fr2 * 0.07 + i * 0.4) % m
             if tf >= len(t):
                 tf = len(t) * 2 - 2 - tf
         else:
-            tf = int(fr * 0.07 + i * 0.4) % len(t)
+            tf = int(fr2 * 0.07 + i * 0.4) % len(t)
         s = math.sin((x + sh) * 0.01 * f) 
-        
+        alive = hpm[i] > 0.0
         if hpm[i] > 1.0:
             hpm[i] = 1.0
             
         if x > ship_x + 20 and hits:
             hpm[i] -= 0.3
             if hpm[i] < 0.0:
-                hpm[i] = -0.5
+                hpm[i] = -0.7
+                if alive:
+                    enemy_score += 1
         elif x > ship_x + 40 and x < ww + 10:
-            laser_y =  math.sin((x - ship_x) * 0.01 * f) * s_h + ship_y
+            laser_y =  math.sin((x - ship_x - 22) * 0.01 * f) * s_h + ship_y
             if abs(laser_y - (y + s * h)) < 5:
                 hpm[i] -= 0.015
                 if hpm[i] < 0.0:
-                    hpm[i] = -0.5
+                    hpm[i] = -0.7
+                    if alive:
+                        enemy_score += 1
         
     
-        if hpm[i] < -1.0:
+        if hpm[i] < -1.0 and hpm[i] > -1000.0:
             hpm[i] = -1.0
         if hpm[i] > 0.0:
 
-            a = frame / 30.0
+            a = frame_2 / 50.0
             d = 10
             screen.blit(red[tf], (x - 8 + math.sin(a) * red_shift * d,  y + s * h - 8 + math.cos(a) * red_shift * d), None, pygame.BLEND_RGB_MAX )
             a += math.pi * 0.66
@@ -384,19 +576,24 @@ while True:
             
             
             screen.blit(t[tf], (x - 8,  y + s * h - 8) ) 
-            
+        if x < -10 and hpm[i] > -1000.0:
+            if hpm[i] > 0.0:
+                hit_points -= 1
+            hpm[i] = -100000.0
         x += (abs(s) * 0.5 + 1.5) * 12
     max_enemy = max(max_enemy, x)
 
-    if x < -20 or e['c'] == 0:
+    if x < -20 or e['c'] == 0 and menu == 0:
         enemies.remove(e)
   
-  if len(enemies) == 0 or frame > r_spawn:
+  if menu == 0 and (len(enemies) == 0 or frame > r_spawn):
     et = randint(0, len(etypes)-1)
     
-    enemies.append({ 'shift' : random() * 100, 'hp' : 1.0, 'x' : ww + 20 + random() * 40, 'y' : random() * (wh - 300) + 150, 'et' : et, 'c' : randint(8, 16), 'f' : 3 + random() * 0 , 'h' : min_h + random() * (max_h - min_h), 's' : frame, 'sp' : 0.7 + random() * 0.7})
+    enemies.append({ 'shift' : random() * 100, 'hp' : 1.0, 'x' : ww + 20 + random() * 40, 'y' : random() * (wh - 300) + 150, 'et' : et, 'c' : randint(8, 16), 'f' : 3 + random() * 0 , 'h' : min_h + random() * (max_h - min_h), 's' : frame, 'sp' : 0.5 + random() * 0.5})
     r_spawn = random() * 300 + 400 + frame
-
+  if menu == 0 and hit_points <= 0:
+    menu = 7
+    enemies = []
   pygame.display.flip()
   if stream.get_read_available() >= chunk:
     data = stream.read(chunk)
