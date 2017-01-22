@@ -6,4 +6,10 @@ copy *.ogg dist
 copy *.ttf dist
 copy *.wav dist
 del dist\ship_big.png
+del dist\cover.png
+del dist\ss1.png
+del dist\ss2.png
+del dist\ss3.png
+rmdir WaveShift /s /q
 move dist WaveShift
+rmdir build /s /q

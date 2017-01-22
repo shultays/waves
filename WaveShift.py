@@ -61,6 +61,8 @@ infoObject = pygame.display.Info()
 sc = 1
 ww = infoObject.current_w / sc
 wh = infoObject.current_h / sc
+
+
 screen = pygame.display.set_mode((ww, wh), pygame.DOUBLEBUF | pygame.NOFRAME )
 
 pygame.display.set_caption("Waves")
@@ -234,7 +236,16 @@ basicfont = pygame.font.Font("game_over.ttf", 64)
 option = 0
 
 h_minus = 15
-h_mult = 5
+h_mult = 6
+
+try:
+    file = open("settings.txt", "r") 
+    content = file.readlines()
+    h_minus = float(content[0])
+    h_mult = float(content[1])
+except:
+    print "No settings:"
+    
 sc_pressed = False
 music_pressed = False
 while True:
@@ -268,22 +279,33 @@ while True:
         resize()
   else:
     sc_pressed = False
-  if keys[pygame.K_KP_PLUS]:
+    
+  o_h_minus = h_minus
+  o_h_mult = h_mult
+  if keys[pygame.K_KP_PLUS] or keys[pygame.K_u]:
     h_minus += 1
     print(h_minus)
-  if keys[pygame.K_KP_MINUS]:
+  if keys[pygame.K_KP_MINUS] or keys[pygame.K_j]:
     h_minus -= 1
     print(h_minus)
   h_minus = max(1, min(1000, h_minus))
 
-  if keys[pygame.K_KP_DIVIDE]:
+  if keys[pygame.K_KP_DIVIDE] or keys[pygame.K_y]:
     h_mult /= 1.001
     print(h_mult)
-  if keys[pygame.K_KP_MULTIPLY]:
+  if keys[pygame.K_KP_MULTIPLY] or keys[pygame.K_h]:
     h_mult *= 1.001
     print(h_mult)
   h_mult = max(0.1, min(10.0, h_mult))
-  
+  if h_mult != o_h_mult or h_minus != o_h_minus:
+    try:
+        file = open("settings.txt", "w") 
+        file.write(str(h_minus))
+        file.write("\n")
+        file.write(str(h_mult))
+        file.write("\n")
+    except IOError:
+        print "No settings:"
   if keys[pygame.K_z] == False and menu == 0:
     frame += 1
   screen.fill((0, 0, 0))
@@ -457,7 +479,6 @@ while True:
     s_shift = -3
   
   diff = frame / 12000.0
-  
   if diff > 1.0:
     diff = 1.0
   for s in stars:
@@ -545,6 +566,31 @@ while True:
     textrect = text.get_rect()
     textrect.centerx = screen.get_rect().centerx
     textrect.centery = screen.get_rect().centery - 160 - ss * 5
+    screen.blit(text, textrect)
+
+
+    text = basicfont.render('Calibrate microphone if necessarry', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery + 160 + ss * 1
+    screen.blit(text, textrect)
+
+    text = basicfont.render('First use numpad +- (or u-j) to calibrate noise level without speaking. ', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery + 180 + ss * 2
+    screen.blit(text, textrect)
+    text = basicfont.render('Your line should be flat when there is no sound ', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery + 200 + ss * 2
+    screen.blit(text, textrect)
+
+    
+    text = basicfont.render('Then start making a sound and calibrate the to line height with numpad */ (or y-h) . ', True, (200, 200, 200))
+    textrect = text.get_rect()
+    textrect.centerx = screen.get_rect().centerx
+    textrect.centery = screen.get_rect().centery + 220 + ss * 3
     screen.blit(text, textrect)
     
   elif menu == 0:
